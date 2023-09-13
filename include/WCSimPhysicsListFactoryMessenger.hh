@@ -8,6 +8,7 @@ class WCSimPhysicsListFactory;
 class G4UIdirectory;
 class G4UIcommand;
 class G4UIcmdWithAString;
+class G4UIcmdWithABool;
 
 class WCSimPhysicsListFactoryMessenger: public G4UImessenger
 {
@@ -24,6 +25,9 @@ private:
   G4UIdirectory*      WCSimDir;
   G4UIcmdWithAString* physListCmd;
   G4UIcmdWithAString* nCaptureModelCmd;
+
+  G4UIcmdWithABool* custNuclearModelCmd;
+
 
 };
 

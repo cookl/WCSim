@@ -16,6 +16,10 @@
 #include "G4PhysicalConstants.hh"
 #include "G4SystemOfUnits.hh"
 
+#include "WCTEHardScatterProcess.hh"
+
+#include<iostream>
+
 /* This code draws upon examples/extended/fields/field04 for inspiration */
 
 
@@ -57,6 +61,30 @@ void WCSimPhysicsListFactory::ConstructParticle()
 
 void WCSimPhysicsListFactory::ConstructProcess() {
     G4VModularPhysicsList::ConstructProcess();
+    
+    //laurence add custom scatter here
+    if(custNuclScatter){
+        // WCTEHardScatterProcess* hardScatterProcess = new WCTEHardScatterProcess();
+        // G4ProcessManager *emanager = G4Electron::Electron()->GetProcessManager();
+        // emanager->AddDiscreteProcess(hardScatterProcess);
+        // G4cout << " ===> Registered hardScatterProcess Process " << G4endl;
+        auto particleIterator=GetParticleIterator();
+        particleIterator->reset();        
+        WCTEHardScatterProcess* hardScatterProcess = new WCTEHardScatterProcess();
+        while( (*particleIterator)() ){
+
+            G4ParticleDefinition* particle = particleIterator->value();
+            G4ProcessManager* pmanager = particle->GetProcessManager();
+
+            G4String particleName = particle->GetParticleName();
+
+            if (particleName == "mu-") {
+                pmanager -> AddDiscreteProcess(hardScatterProcess);
+                G4cout << " ===> Registered hardScatterProcess Process " << G4endl;
+            }
+        }   
+    }
+
     if (nCaptModelChoice.compareTo("Default", G4String::ignoreCase) == 0) return;
     G4ProcessTable *table = G4ProcessTable::GetProcessTable();
     G4ProcessManager *manager = G4Neutron::Neutron()->GetProcessManager();
@@ -131,6 +159,11 @@ void WCSimPhysicsListFactory::SetList(G4String newvalue){
 void WCSimPhysicsListFactory::SetnCaptModel(G4String newvalue){
     G4cout << "Setting neutron capture model to " << newvalue << G4endl;
     nCaptModelChoice = newvalue;
+}
+
+void WCSimPhysicsListFactory::SetCustNuclScatter(bool value){
+  G4cout << "Setting Custom Nuclear Scatter " << value << G4endl;
+  custNuclScatter = value;
 }
 
 void WCSimPhysicsListFactory::InitializeList(){

@@ -5,6 +5,7 @@
 #include "G4ios.hh"
 #include "globals.hh"
 #include "G4UIcmdWithAString.hh"
+#include "G4UIcmdWithABool.hh"
 
 WCSimPhysicsListFactoryMessenger::WCSimPhysicsListFactoryMessenger(WCSimPhysicsListFactory* WCSimPhysFactory, G4String inValidListsString)
   :thisWCSimPhysicsListFactory(WCSimPhysFactory), ValidListsString(inValidListsString)
@@ -30,12 +31,19 @@ WCSimPhysicsListFactoryMessenger::WCSimPhysicsListFactoryMessenger(WCSimPhysicsL
   nCaptureModelCmd->SetGuidance(captureModelGuidance);
   nCaptureModelCmd->SetDefaultValue("Default");
   nCaptureModelCmd->SetCandidates(captureModelsString);
+
+  //Laurence add messenger for new hard scatter process
+  custNuclearModelCmd = new G4UIcmdWithABool("/WCSim/physics/customNuclearScatter",this);
+  custNuclearModelCmd->SetGuidance("Choose whether to include the custom nuclear scatter");
+  custNuclearModelCmd->SetDefaultValue(false);
+
 }
 
 WCSimPhysicsListFactoryMessenger::~WCSimPhysicsListFactoryMessenger()
 {
   delete physListCmd;
   delete nCaptureModelCmd;
+  delete custNuclearModelCmd;
   //delete WCSimDir;
 }
 
@@ -45,5 +53,8 @@ void WCSimPhysicsListFactoryMessenger::SetNewValue(G4UIcommand* command, G4Strin
     thisWCSimPhysicsListFactory->SetList(newValue);
   else if (command == nCaptureModelCmd){
     thisWCSimPhysicsListFactory->SetnCaptModel(newValue);
+  }else if(command == custNuclearModelCmd){
+    bool value = command->ConvertToBool(newValue);
+    thisWCSimPhysicsListFactory->SetCustNuclScatter(value);
   }
 }

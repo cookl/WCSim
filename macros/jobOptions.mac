@@ -15,5 +15,6 @@
 /WCSim/physics/list FTFP_BERT # recommended for high energy physics and hadron production up to beam momentum of several tens of GeV/c.
 #/WCSim/physics/list FTFP_BERT_HP
 /WCSim/physics/nCapture Default
+/WCSim/physics/customNuclearScatter true
 
 
