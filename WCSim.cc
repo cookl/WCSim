@@ -86,9 +86,9 @@ int main(int argc,char** argv)
       break;
 #endif
 
-    case 3 :    // Batch mode with two command-line arguments
+    case 4 :    // Batch mode with three command-line arguments - change to 3 for joboptions
       // Check presence of input files
-      if( file_exists(argv[1]) && file_exists(argv[2]) ) {
+      if( file_exists(argv[1]) && file_exists(argv[2]) && file_exists(argv[3]) ) {
         exemode = WCSimExeMode::Batch;
         // Process tuning parameters
         G4cout << "Processing tuning parameter file " << argv[2] << G4endl;
@@ -132,11 +132,18 @@ int main(int argc,char** argv)
     WCSIMDIR = "."; // the "default" value
     G4cout << "Note: WCSIMDIR not set, assuming: " << WCSIMDIR << G4endl;
   }
-  G4cout << "B.Q: Read" << Form("/control/execute %s/macros/jobOptions.mac",WCSIMDIR) << G4endl;
-  if(!file_exists(Form("%s/macros/jobOptions.mac",WCSIMDIR)))
-    return -1;
-  UI->ApplyCommand(Form("/control/execute %s/macros/jobOptions.mac",WCSIMDIR));
+  if(argc!=4){
+    //original mode
+    G4cout << "B.Q: Read" << Form("/control/execute %s/macros/jobOptions.mac",WCSIMDIR) << G4endl;
+    if(!file_exists(Form("%s/macros/jobOptions.mac",WCSIMDIR)))
+      return -1;
+    UI->ApplyCommand(Form("/control/execute %s/macros/jobOptions.mac",WCSIMDIR));
+  }else{
+    G4cout << "Parsing job options from " << G4String(argv[3]) << G4endl;
+    //three arguments 
+    UI->ApplyCommand(execommand + G4String(argv[3]));
 
+  }
   // Initialize the physics factory to register the selected physics.
   physFactory->InitializeList();
   runManager->SetUserInitialization(physFactory);
