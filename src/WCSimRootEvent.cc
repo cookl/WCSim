@@ -24,6 +24,7 @@ ClassImp(WCSimRootCherenkovDigiHit)
 ClassImp(WCSimRootCherenkovHit)
 ClassImp(WCSimRootCherenkovHitTime)
 ClassImp(WCSimRootTrack)
+ClassImp(WCSimRootInteraction)
 ClassImp(WCSimRootPi0)
 ClassImp(WCSimRootEventHeader)
 ClassImp(WCSimRootTrigger)
@@ -56,6 +57,10 @@ WCSimRootTrigger::WCSimRootTrigger()
   fTracks = 0;
   fNtrack = 0;
   fNtrack_slots = 0;
+
+  // TClonesArray of WCSimRootInteractions
+  fNinteractions = 0;
+  fInteractions = 0;
 
   // TClonesArray of WCSimRootCherenkovHits
   fCherenkovHits = 0;
@@ -100,6 +105,10 @@ void WCSimRootTrigger::Initialize() //actually allocate memory for things in her
   fTracks->BypassStreamer(kFALSE); // use the member Streamer
   fNtrack = 0;
   fNtrack_slots = 0;
+
+   // TClonesArray of WCSimRootInteractions
+  fInteractions = new TClonesArray("WCSimRootInteraction", 10000);
+  fNinteractions = 0;
 
   // TClonesArray of WCSimRootCherenkovHits
   fCherenkovHits = new TClonesArray("WCSimRootCherenkovHit", 
@@ -147,13 +156,15 @@ WCSimRootTrigger::~WCSimRootTrigger()
 
   if (!IsZombie) {
 
-    fTracks->Delete();            
+    fTracks->Delete();         
+    fInteractions->Delete();               
     fCherenkovHits->Delete();      
     fCherenkovHitTimes->Delete();   
     fCherenkovDigiHits->Delete();
     fCaptures->Delete();
     
-    delete   fTracks;            
+    delete   fTracks;    
+    delete   fInteractions;               
     delete   fCherenkovHits;      
     delete   fCherenkovHitTimes;   
     delete   fCherenkovDigiHits;
@@ -220,6 +231,8 @@ void WCSimRootTrigger::Clear(Option_t */*option*/)
   fNtrack = 0;
   fNtrack_slots = 0;
 
+  fNinteractions=0;
+
   // TClonesArray of WCSimRootCherenkovHits
   fNcherenkovhits = 0;
   fNcherenkovhittimes = 0;
@@ -236,6 +249,7 @@ void WCSimRootTrigger::Clear(Option_t */*option*/)
   // but don't deallocate the arrays themselves
 
   fTracks->Delete();
+  fInteractions->Delete();  
   fCherenkovHits->Delete();
   fCherenkovHitTimes->Delete();
   fCherenkovDigiHits->Delete();
@@ -443,6 +457,17 @@ WCSimRootTrack *WCSimRootTrigger::AddTrack(Int_t ipnu,
 
 //_____________________________________________________________________________
 
+WCSimRootInteraction    *WCSimRootTrigger::AddInteraction(WCSimInteraction* track_interaction){
+  //copy implementation of the track
+  std::cout << "Interaction added WCSimRootTrigger" << std::endl;
+  TClonesArray &interactions = *fInteractions;
+  WCSimRootInteraction *interaction = 
+            new(interactions[fNinteractions++]) WCSimRootInteraction(track_interaction);
+  return interaction;
+}
+
+//_____________________________________________________________________________
+
 WCSimRootTrack *WCSimRootTrigger::AddTrack(WCSimRootTrack * track)
 {
   // Add a new WCSimRootTrack to the list of tracks for this event.
@@ -541,6 +566,33 @@ WCSimRootTrack::WCSimRootTrack(Int_t ipnu,
   boundaryKEs = bKEs;
   boundaryTimes = bTimes;
   boundaryTypes = bTypes;
+}
+
+//_____________________________________________________________________________
+
+WCSimRootInteraction::WCSimRootInteraction(WCSimInteraction* interaction){
+
+  fInPid = interaction->getInPid();      
+  fInTrackID = interaction->getInTrackID();
+  fIntCode = interaction->getIntCode();
+  fIntName = interaction->getIntName();
+  fNDaughters =interaction->getNDaughters();
+
+  for(int i=0; i<3; i++){
+    fInDir[i] = interaction->getInDir(i);
+    fInMom[i] = interaction->getInMom(i);
+    fIntVertex[i] = interaction->getIntVertex(i);
+
+  }
+
+  for(int i=0; i<fNDaughters; i++){
+    fDaughterPID.push_back(interaction->GetDaughterPID(i));
+    fDaughterTrackID.push_back(interaction->GetDaughterTrackID(i));
+    fDaughterMomX.push_back(interaction->GetDaughterMomX(i));
+    fDaughterMomY.push_back(interaction->GetDaughterMomY(i));
+    fDaughterMomZ.push_back(interaction->GetDaughterMomZ(i));
+  }
+  return;
 }
 
 //_____________________________________________________________________________

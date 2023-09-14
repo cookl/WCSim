@@ -75,7 +75,9 @@ WCSimTrajectory::WCSimTrajectory(WCSimTrajectory & right):G4VTrajectory()
   stoppingVolume = right.stoppingVolume;
   SaveIt = right.SaveIt;
   creatorProcess = right.creatorProcess;
-
+  
+  for(int i=0; i<right.interactionVector.size(); i++) interactionVector.push_back(right.interactionVector[i]);
+  
   for(size_t i=0;i<right.positionRecord->size();i++)
   {
     G4TrajectoryPoint* rightPoint = (G4TrajectoryPoint*)((*(right.positionRecord))[i]);
@@ -97,8 +99,13 @@ WCSimTrajectory::~WCSimTrajectory()
     delete  (*positionRecord)[i];
   }
   positionRecord->clear();
-  
   delete positionRecord;
+
+  for(int i=0; i<interactionVector.size(); i++){
+    delete interactionVector[i];
+  }
+  interactionVector.clear();
+  
 
   boundaryPoints.clear();
   boundaryKEs.clear();
@@ -220,6 +227,50 @@ void WCSimTrajectory::AppendStep(const G4Step* aStep)
       //    " "<<track->GetKineticEnergy()<<" "<<thePrePV->GetName()<<" "<<thePostPV->GetName()<<G4endl;
     }
   }
+  
+  // save an interaction to the trajectory
+  const G4VProcess *proc = aStep->GetPostStepPoint()->GetProcessDefinedStep();
+  G4String processName = proc ? proc->GetProcessName() : "";
+  if(processName=="WCTEHardScatterProcess"){
+    std::cout << "Adding to trajectory" << std::endl;
+    //add the interaction to the trajectory
+    //get interaction details 
+    int inPiD = aStep->GetTrack()->GetDefinition()->GetPDGEncoding();
+    int inTrackID = aStep->GetTrack()->GetTrackID();
+    float inMom[3] = {};
+    float inDir[3] = {};
+    float intVertex[3] = {};
+    int intCode = (int)(proc->GetProcessSubType());
+    std::string intName = proc->GetProcessName();
+
+    for(int i=0; i<3; i++){
+      inMom[i] = aStep->GetPreStepPoint()->GetMomentum()[i];
+      inDir[i] = aStep->GetPreStepPoint()->GetMomentumDirection()[i];
+      intVertex[i] = aStep->GetPostStepPoint()->GetPosition()[i];
+    }
+
+    const std::vector<const G4Track*> *secondariesInCurrentStep = aStep->GetSecondaryInCurrentStep();
+    WCSimInteraction* interaction = new WCSimInteraction(inPiD,inDir,inMom,inTrackID,intVertex,intCode,intName);
+
+    //add the outgoing track as the first daughter
+    float outMom[3] = {};
+    for(int i=0; i<3; i++) outMom[i] = aStep->GetPostStepPoint()->GetMomentum()[i];
+    interaction->AddDaughter(inPiD, inTrackID, outMom);
+
+    //iterate through any secondaries made
+    for (unsigned int i = 0; i < secondariesInCurrentStep->size(); i++){
+      const G4Track *secondaryTrack = (*secondariesInCurrentStep)[i];
+      if(secondaryTrack->GetDefinition()->GetParticleName()!="opticalphoton"){
+        int secID = secondaryTrack->GetDefinition()->GetPDGEncoding();
+        int secTrackID = secondaryTrack->GetTrackID();
+        float secMom[3] = {};
+        for(int j=0; j<3; j++) secMom[j] = secondaryTrack->GetMomentum()[j];
+        interaction->AddDaughter(secID, secTrackID, secMom);
+      }
+    }
+    interactionVector.push_back(interaction);
+  }
+
 }
 
 G4ParticleDefinition* WCSimTrajectory::GetParticleDefinition()
@@ -244,6 +295,13 @@ void WCSimTrajectory::MergeTrajectory(G4VTrajectory* secondTrajectory)
   }
   delete (*seco->positionRecord)[0];
   seco->positionRecord->clear();
+
+  //push back interactions from secondary trajectory
+  for(G4int i=0; i<seco->GetNInteractions(); i++){
+    std::cout << "Mergin interation" << std::endl;
+    interactionVector.push_back(seco->GetInteraction(i));
+  }
+  seco->interactionVector.clear();
 
   ent = (seco->GetBoundaryPoints()).size();
   for (G4int i=0;i<ent;i++)

@@ -20,6 +20,7 @@
 
 #include "jhfNtuple.h"
 #include "WCSimEnumerations.hh"
+#include "WCSimInteraction.h"
 
 class TDirectory;
 
@@ -93,6 +94,56 @@ public:
   std::vector<int> GetBoundaryTypes() const {return boundaryTypes;}
 
   ClassDef(WCSimRootTrack,4)
+};
+
+class WCSimRootInteraction : public TObject {
+
+private:
+
+  //input particle info
+  Int_t   fInPid; //input particle ID       
+  Float_t fInDir[3]; //input particle direction
+  Float_t fInMom[3]; //input particle Momentum
+  Float_t fInTrackID; //input particle track ID
+
+  //interaction info
+  Float_t fIntVertex[3]; //interaction vertex
+  Int_t fIntCode; //interaction code
+  TString fIntName; //interaction name
+
+  //output daughters info
+  Int_t fNDaughters;
+  std::vector<Int_t> fDaughterPID;
+  std::vector<Int_t> fDaughterTrackID;
+  std::vector<Float_t> fDaughterMomX;
+  std::vector<Float_t> fDaughterMomY;
+  std::vector<Float_t> fDaughterMomZ;
+
+
+public:
+  WCSimRootInteraction() {}
+
+  WCSimRootInteraction(WCSimInteraction* interaction);
+
+  virtual ~WCSimRootInteraction() { }
+
+  Int_t     GetInPid() const { return fInPid;}
+  Float_t   GetInDir(Int_t i=0) {return (i<3) ? fInDir[i] : 0;} 
+  Float_t   GetInMom(Int_t i=0) {return (i<3) ? fInMom[i] : 0;} 
+  Int_t     GetInTrackID() const { return fInTrackID;}
+
+  Float_t   GetIntVertex(Int_t i=0) {return (i<3) ? fIntVertex[i] : 0;} 
+  Int_t     GetIntCode() const { return fIntCode;}
+  TString   GetIntName() const { return fIntName;}
+
+  Int_t     GetNDaughters() const { return fNDaughters;}
+  Int_t     GetDaughterPID(Int_t i=0) const { return (i<fNDaughters) ? fDaughterPID[i] : 0;} 
+  Int_t     GetDaughterTrackID(Int_t i=0) const { return (i<fNDaughters) ? fDaughterTrackID[i] : 0;} 
+  Float_t     GetDaughterMomX(Int_t i=0) const { return (i<fNDaughters) ? fDaughterMomX[i] : 0;} 
+  Float_t     GetDaughterMomY(Int_t i=0) const { return (i<fNDaughters) ? fDaughterMomY[i] : 0;} 
+  Float_t     GetDaughterMomZ(Int_t i=0) const { return (i<fNDaughters) ? fDaughterMomZ[i] : 0;} 
+
+  ClassDef(WCSimRootInteraction,1)  
 };
 
 
@@ -354,6 +405,9 @@ private:
   Int_t                fNtrack_slots;       // Number of slots in the tracks array. This is potentially more than fNtrack (i.e. if any tracks have been removed that aren't at the very start/end)
   TClonesArray         *fTracks;            //-> Array of WCSimRootTracks 
 
+  Int_t                fNinteractions;             // Number of interactions in array
+  TClonesArray         *fInteractions;            //-> Array of WCSimRootInteraction 
+
   Int_t                fNumTubesHit;         // Number of tubes hit
   Int_t                fNcherenkovhits;      // Number of hits in the array
   TClonesArray         *fCherenkovHits;      //-> Array of WCSimRootCherenkovHits
@@ -435,6 +489,7 @@ public:
   Int_t               GetNumTubesHit()        const {return fNumTubesHit;}
   Int_t               GetNumDigiTubesHit()    const {return fNumDigitizedTubes;}
   Int_t               GetNtrack()             const {return fNtrack; }
+  Int_t               GetNinteractions()      const {return fNinteractions; }
   Int_t               GetNcaptures()          const {return fNcaptures; }
   Int_t               GetNtrack_slots()       const {return fTracks->GetLast() + 1; } //don't use fNtrack_slots directly as it doesn't take into account automatic TClonesArray shortening when tracks at start/end are removed
   Int_t               GetNcherenkovhits()     const {return fNcherenkovhits; }
@@ -464,11 +519,14 @@ public:
            std::vector<float> bKEs,
            std::vector<double> bTimes,
            std::vector<int> bTypes);
+  
+  WCSimRootInteraction    *AddInteraction(WCSimInteraction* interaction);         
 
   WCSimRootTrack * AddTrack   (WCSimRootTrack * track);
   WCSimRootTrack * RemoveTrack(WCSimRootTrack * track);
 
   TClonesArray        *GetTracks() const {return fTracks;}
+  TClonesArray        *GetInteractions() const {return fInteractions;}
 
   WCSimRootCherenkovHit   *AddCherenkovHit(Int_t                tubeID,
 					   Int_t                mPMTID,
@@ -496,7 +554,7 @@ public:
 
   TClonesArray	      *GetCaptures() const {return fCaptures;}
 
-  ClassDef(WCSimRootTrigger,5) //WCSimRootEvent structure
+  ClassDef(WCSimRootTrigger,6) //WCSimRootEvent structure
 };
 
 

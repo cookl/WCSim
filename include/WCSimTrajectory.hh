@@ -13,6 +13,7 @@ class WCSimTrajectory;
 #include "G4TrajectoryPoint.hh"     // Include from 'tracking'
 #include "G4Track.hh"
 #include "G4Step.hh"
+#include "WCSimInteraction.h"
 
 #include "WCSimEnumerations.hh"
 
@@ -73,6 +74,15 @@ public: // with description
    { stoppingPoint = currentPosition;}
    inline void SetStoppingVolume(G4VPhysicalVolume* currentVolume)
    { stoppingVolume = currentVolume;}
+
+//interaction vector getters
+   inline G4int GetNInteractions() const
+   { return interactionVector.size(); }
+
+   inline WCSimInteraction* GetInteraction(int i) const
+   { return interactionVector[i]; }
+
+
 
 // Functions to Set/Get boundary points
   inline void SetBoundaryPoints(std::vector<std::vector<G4float>> bPs,
@@ -136,6 +146,9 @@ public: // with description
   // These are new variables
   G4ThreeVector             stoppingPoint;
   G4VPhysicalVolume         *stoppingVolume;
+
+  //Add vector of interactions along the trajectory
+  std::vector<WCSimInteraction*> interactionVector;
 
   // M Fechner : new saving mechanism
   G4bool SaveIt;

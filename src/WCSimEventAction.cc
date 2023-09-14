@@ -1942,6 +1942,33 @@ void WCSimEventAction::FillRootEventHybrid(G4int event_id,
     }
   }
 
+  // Add the interactions
+  std::cout << "saving interactions" << std::endl;
+  for (int i=0; i <n_trajectories; i++){
+    //loop through all trajectories and save interactions
+    WCSimTrajectory* trj = (WCSimTrajectory*)(*TC)[i];
+    //global time to find correct trigger
+    if(trj->GetNInteractions()>0){
+      //this trajectory has one or more interactions saved in it
+      std::cout << "Adding an interaction" << std::endl;
+
+      G4double ttime = trj->GetGlobalTime(); 
+      int choose_event = 0;
+      if (ngates) {
+        if (ttime > WCTM->GetTriggerTime(0) + 950. && WCTM->GetTriggerTime(1) + 950. > ttime) choose_event = 1;
+        if (ttime > WCTM->GetTriggerTime(1) + 950. && WCTM->GetTriggerTime(2) + 950. > ttime) choose_event = 2;
+        if (choose_event >= ngates) choose_event = ngates - 1; // do not overflow the number of events
+      }
+
+      wcsimrootevent = wcsimrootsuperevent->GetTrigger(choose_event);
+      for(int j=0; j<trj->GetNInteractions() ;j++){
+        WCSimInteraction* interaction = trj->GetInteraction(j);
+        wcsimrootevent->AddInteraction(interaction);
+        // std::cout << "Adding interaction "   << interaction->getIntName()<< " " << j << std::endl;
+      }                             
+    }
+  }
+
   // Add the Cherenkov hits
   wcsimrootevent = wcsimrootsuperevent->GetTrigger(0);
 
