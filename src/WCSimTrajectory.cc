@@ -232,7 +232,7 @@ void WCSimTrajectory::AppendStep(const G4Step* aStep)
   const G4VProcess *proc = aStep->GetPostStepPoint()->GetProcessDefinedStep();
   G4String processName = proc ? proc->GetProcessName() : "";
   if(processName=="WCTEHardScatterProcess"){
-    std::cout << "Adding to trajectory" << std::endl;
+    // std::cout << "Adding to trajectory" << std::endl;
     //add the interaction to the trajectory
     //get interaction details 
     int inPiD = aStep->GetTrack()->GetDefinition()->GetPDGEncoding();
@@ -250,11 +250,29 @@ void WCSimTrajectory::AppendStep(const G4Step* aStep)
     }
 
     const std::vector<const G4Track*> *secondariesInCurrentStep = aStep->GetSecondaryInCurrentStep();
+    // std::cout << "Interaction in mom " << inMom[0]/CLHEP::GeV <<" " << inMom[1]/CLHEP::GeV <<" " <<inMom[2]/CLHEP::GeV <<  std::endl;
+    // std::cout << "Interaction in energy " << aStep->GetPreStepPoint()->GetKineticEnergy()/CLHEP::GeV << " GeV"<<  std::endl;
+    // std::cout << "Interaction in mom dir " << aStep->GetPreStepPoint()->GetMomentumDirection()[0] <<" " << aStep->GetPreStepPoint()->GetMomentumDirection()[1] <<" " <<aStep->GetPreStepPoint()->GetMomentumDirection()[2] <<  std::endl;
+
     WCSimInteraction* interaction = new WCSimInteraction(inPiD,inDir,inMom,inTrackID,intVertex,intCode,intName);
+
+    //calculate the total momentum of optical photons
+    double opticalPhotonMomentum[3]={};
+    for (unsigned int i = 0; i < secondariesInCurrentStep->size(); i++){
+      const G4Track *secondaryTrack = (*secondariesInCurrentStep)[i];
+      if(secondaryTrack->GetDefinition()->GetParticleName()=="opticalphoton"){
+        for(int j=0; j<3; j++) opticalPhotonMomentum[j] =opticalPhotonMomentum[j]+ secondaryTrack->GetMomentum()[j];
+      }
+    }
+    // std::cout << "total optical photon momentum " << opticalPhotonMomentum[0]/CLHEP::MeV <<" MeV " << opticalPhotonMomentum[1]/CLHEP::MeV <<" MeV " << opticalPhotonMomentum[2]/CLHEP::MeV <<" MeV " << std::endl;
+    // std::cout << "Total energy deposit " << aStep->GetTotalEnergyDeposit()/CLHEP::GeV << " GeV " << std::endl; 
+    // std::cout << "Interaction in mom " << (inMom[0]+opticalPhotonMomentum[0])/CLHEP::GeV <<" " << (inMom[1]+opticalPhotonMomentum[1])/CLHEP::GeV <<" " <<(inMom[2]+opticalPhotonMomentum[2])/CLHEP::GeV <<  std::endl;
 
     //add the outgoing track as the first daughter
     float outMom[3] = {};
     for(int i=0; i<3; i++) outMom[i] = aStep->GetPostStepPoint()->GetMomentum()[i];
+    // std::cout << "Interaction out mom " << outMom[0]/CLHEP::GeV <<" " << outMom[1]/CLHEP::GeV <<" " <<outMom[2]/CLHEP::GeV <<  std::endl;
+    
     interaction->AddDaughter(inPiD, inTrackID, outMom);
 
     //iterate through any secondaries made

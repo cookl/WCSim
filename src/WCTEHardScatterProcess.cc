@@ -58,8 +58,9 @@ WCTEHardScatterProcess::PostStepDoIt(const G4Track& aTrack, const G4Step& aStep)
 
     const G4DynamicParticle* aParticle = aTrack.GetDynamicParticle();
     double inEnergy = aParticle->GetKineticEnergy();
-    // std::cout << "Hard Scatter " << inEnergy/CLHEP::GeV << std::endl;
-
+    // std::cout << "Hard Scatter in mom" << aParticle->GetMomentum ()[0]/CLHEP::GeV << " "<< aParticle->GetMomentum ()[1]/CLHEP::GeV <<" "<< aParticle->GetMomentum ()[2]/CLHEP::GeV << std::endl;
+    // std::cout << "Hard Scatter in KE" << aParticle->GetKineticEnergy ()/CLHEP::GeV << " GeV "<< std::endl;
+    // std::cout << "Hard scatter in mom dir " << aParticle->GetMomentumDirection()[0] << " "<< aParticle->GetMomentumDirection()[1] << " "<< aParticle->GetMomentumDirection()[2] << std::endl; 
     aParticleChange.Initialize(aTrack);
 
     // if ( verboseLevel > 0) {
@@ -170,8 +171,12 @@ WCTEHardScatterProcess::PostStepDoIt(const G4Track& aTrack, const G4Step& aStep)
    //NB this is the kinetic energy
    aParticleChange.ProposeEnergy(energy);
    
-
-   // std::cout << "After change GetEnergy " << aParticleChange.GetEnergy() << std::endl;
+   double debug_mass = aParticleChange.GetMass();
+   double debug_kineticEnergy = aParticleChange.GetEnergy();
+   double debug_energy = debug_kineticEnergy + debug_mass;
+   double debug_momentum = sqrt(pow(debug_energy,2)-pow(debug_mass,2));
+   debug_momentum = debug_momentum/CLHEP::GeV;
+  //  std::cout << " Hard Scatter After change momentum " << debug_momentum*(aParticleChange.GetMomentumDirection()[0]) << " " << debug_momentum*(aParticleChange.GetMomentumDirection()[1]) << " " << debug_momentum*(aParticleChange.GetMomentumDirection()[2]) << std::endl;
    // if (verboseLevel > 0) {
    //   G4cout << "New Polarization: "
    //        << NewPolarizationDirection << G4endl;
